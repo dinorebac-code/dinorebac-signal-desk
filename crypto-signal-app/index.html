@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signal Desk | SOL + EURUSD</title>
+    <meta
+      name="description"
+      content="Personlig analyseapp for SOL og EURUSD med separate laeringsprofiler, historikk, winrate og Supabase-klar dataflyt."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb bg-orb-a"></div>
+    <div class="bg-orb bg-orb-b"></div>
+    <div class="bg-grid"></div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Personal Signal Lab</p>
+          <h1>Signal Desk</h1>
+          <p class="sidebar-copy">
+            Daglig setup, overvaking mellom 16:30 og 17:30, separat laering per marked
+            og full historikk i ett roligere dashboard.
+          </p>
+        </div>
+
+        <div class="sidebar-panel">
+          <p class="panel-label">Markeder</p>
+          <ul class="market-list">
+            <li>SOL</li>
+            <li>EUR/USD</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-panel">
+          <p class="panel-label">Planlagt vindu</p>
+          <p id="window-label" class="sidebar-value">16:30-17:30 Europe/Oslo</p>
+          <p class="sidebar-note">
+            Appen bygger dagens setup og sjekker trigger-candles i dette
+            tidsrommet nar den er apen eller nar Supabase-jobbene korer.
+          </p>
+        </div>
+
+        <div class="sidebar-panel">
+          <p class="panel-label">Varseladresse</p>
+          <p id="notification-email" class="sidebar-value">dinorebac@gmail.com</p>
+          <p class="sidebar-note">
+            Varsler sendes hit sa snart en gyldig
+            <code>RESEND_API_KEY</code> ligger i Supabase secrets.
+          </p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="hero-card">
+          <div class="hero-copy-block">
+            <p class="eyebrow">Signal Engine</p>
+            <h2>Ren oversikt over setups, trigger-status og laering</h2>
+            <p class="hero-lead">
+              Dashboardet er gjort enklere a bruke med tydeligere seksjoner,
+              bedre spacing og ingen bred historikktabell. Naar Supabase-funksjonene
+              er deployet, hentes signaler, trades og laering direkte fra serveren.
+            </p>
+            <div class="hero-chips">
+              <span class="hero-chip">SOL + EUR/USD</span>
+              <span class="hero-chip">16:30-17:30 monitor</span>
+              <span class="hero-chip">Auto resolve win/loss</span>
+            </div>
+          </div>
+          <div class="action-row">
+            <button id="refresh-button" class="button button-primary" type="button">
+              Oppdater fra server
+            </button>
+            <button id="reset-button" class="button button-secondary" type="button">
+              Nullstill lokal cache
+            </button>
+            <p class="action-helper">
+              Til vanlig trenger du bare <strong>Oppdater fra server</strong>.
+            </p>
+          </div>
+        </header>
+
+        <section class="notice-grid">
+          <article class="notice-card">
+            <p class="eyebrow">Klar til bruk</p>
+            <h3>Enklere flyt i hverdagen</h3>
+            <p class="section-note">
+              Bruk <strong>Oppdater fra server</strong> for a hente dagens plan.
+              Resten av analysen, monitoreringen og laeringen skjer i Supabase.
+            </p>
+          </article>
+
+          <article class="notice-card">
+            <p class="eyebrow">E-postvarsler</p>
+            <h3>Aktiveres med Resend</h3>
+            <p class="section-note">
+              Varslene sendes til <strong>dinorebac@gmail.com</strong> sa snart du
+              legger inn en gyldig <code>RESEND_API_KEY</code> i
+              <strong>Supabase &gt; Edge Functions &gt; Secrets</strong>. Hvis du vil
+              sende utenfor Resend sin testmodus, legg ogsa inn
+              <code>RESEND_FROM_EMAIL</code> fra et verifisert domene.
+            </p>
+          </article>
+        </section>
+
+        <nav class="quick-nav" aria-label="Seksjonsnavigasjon">
+          <a class="quick-link" href="#signals-section">Dagens signaler</a>
+          <a class="quick-link" href="#monitor-section">Monitor</a>
+          <a class="quick-link" href="#history-section">Historikk</a>
+          <a class="quick-link" href="#status-section">Status</a>
+        </nav>
+
+        <details class="dev-tools">
+          <summary>Test og feilsoking</summary>
+          <p class="dev-tools-note">
+            Disse knappene er bare for testing. Vanlig bruk er dashboard + automatisering i Supabase.
+          </p>
+          <div class="dev-tools-grid">
+            <button id="run-setup-button" class="button button-secondary" type="button">
+              Kjor lokal setup
+            </button>
+            <button id="monitor-button" class="button button-secondary" type="button">
+              Kjor lokal trigger-sjekk
+            </button>
+            <button id="seed-button" class="button button-secondary" type="button">
+              Legg inn demo-historikk
+            </button>
+            <button id="sync-button" class="button button-secondary" type="button">
+              Sync lokal state
+            </button>
+          </div>
+        </details>
+
+        <section class="stats-grid" id="stats-grid"></section>
+
+        <section class="section" id="signals-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Dagens signaler</p>
+              <h3>Bias, confidence og entry-trigger</h3>
+            </div>
+            <p id="data-source-label" class="section-note">
+              Datakilde: lokal preview til API er konfigurert.
+            </p>
+          </div>
+          <div class="signal-grid" id="signals-grid"></div>
+        </section>
+
+        <section class="section two-column" id="monitor-section">
+          <div class="panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Monitor</p>
+                <h3>Trigger-status</h3>
+              </div>
+            </div>
+            <div id="monitor-log" class="log-list"></div>
+          </div>
+
+          <div class="panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Laering</p>
+                <h3>Separat per marked</h3>
+              </div>
+              <p class="section-note">Bygger mest pa de siste 100 lukkede tradene.</p>
+            </div>
+            <div id="learning-grid" class="learning-grid"></div>
+          </div>
+        </section>
+
+        <section class="section" id="history-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Tradejournal</p>
+              <h3>Alle trades og resultater</h3>
+            </div>
+            <p class="section-note">
+              Appen lagrer alt. Apne trades kan lukkes automatisk av serveren,
+              og `win/loss`-knappene er beholdt som manuell override hvis du
+              vil rette en trade.
+            </p>
+          </div>
+          <div id="history-list" class="history-grid"></div>
+        </section>
+
+        <section class="section two-column" id="status-section">
+          <div class="panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Klar til bruk</p>
+                <h3>Oppsett som ma vaere pa plass</h3>
+              </div>
+            </div>
+            <ul class="check-list">
+              <li>Kopier `supabase-schema.sql` inn i SQL Editor.</li>
+              <li>Deploy Edge Functions og Cron fra `supabase/`.</li>
+              <li>Bruk `Oppdater fra server` etter at funksjonene er klare.</li>
+              <li>Legg inn `RESEND_API_KEY` i Supabase hvis du vil ha e-postvarsler.</li>
+              <li>Legg inn `RESEND_FROM_EMAIL` hvis du vil sende fra eget domene.</li>
+              <li>Avanserte knapper er bare til testing eller feilsoking.</li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Status</p>
+                <h3>App-tilstand</h3>
+              </div>
+            </div>
+            <dl class="status-list">
+              <div>
+                <dt>Lokalt lager</dt>
+                <dd id="storage-status">Aktivt</dd>
+              </div>
+              <div>
+                <dt>E-postvarsler</dt>
+                <dd id="email-status">Venter pa RESEND_API_KEY</dd>
+              </div>
+              <div>
+                <dt>Supabase sync</dt>
+                <dd id="sync-status">Ikke konfigurert</dd>
+              </div>
+              <div>
+                <dt>Siste oppdatering</dt>
+                <dd id="last-update-label">Ikke kjort enda</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
