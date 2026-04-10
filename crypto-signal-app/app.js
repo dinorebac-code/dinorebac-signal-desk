@@ -411,7 +411,16 @@
 
     const now = new Date();
     const inWindow = isWithinWatchWindow(now);
+    const windowState = getWatchWindowState(now);
     if (!inWindow && !isManual) {
+      Object.values(setups).forEach((setup) => {
+        if (setup.monitorState !== "confirmed") {
+          setup.monitorState = windowState.phase === "after" ? "closed" : "waiting";
+          setup.monitorMessage = windowState.note;
+        }
+      });
+      persistState();
+      render();
       return;
     }
 
@@ -584,11 +593,12 @@
       ["SOL", "short", 61, "moderate", "82.00 - 82.40", "bearish_engulfing", "win"],
       ["EURUSD", "short", 63, "moderate", "1.0860 - 1.0872", "shooting_star", "win"],
       ["EURUSD", "long", 51, "weak", "1.0785 - 1.0793", "breakout_retest", "loss"],
+      ["EURUSD", "long", 72, "strong", "1.0801 - 1.0810", "bullish_engulfing", "win"],
+      ["EURUSD", "short", 48, "weak", "1.0840 - 1.0850", "bearish_engulfing", "loss"],
     ];
 
     state.trades = seeds.map((seed, index) => ({
       id: crypto.randomUUID(),
-      setupId: null,
       createdAt: new Date(Date.now() - index * 86400000).toISOString(),
       tradeDate: isoDayOffset(index),
       market: seed[0],
@@ -646,6 +656,7 @@
     const winRate = closedTrades.length ? Number(roundNumber((wins / closedTrades.length) * 100)) : 0;
     const todaySetups = Object.values(state.setupsByDate[todayKey()] || {}).length;
     const sampleSize = MARKETS.reduce((total, market) => total + (state.learningByMarket[market.code]?.windowSize || 0), 0);
+    const windowState = getWatchWindowState();
 
     const cards = [
       {
@@ -654,19 +665,21 @@
         copy: `${wins} wins av ${closedTrades.length || 0} lukkede trades`,
       },
       {
+        label: "Vindustatus",
+        value: windowState.label,
+        copy: windowState.note,
+      },
+      {
+        label: "Dagens bias-signaler",
+        value: String(todaySetups),
+        copy: "Appen viser alltid dagens long/short-bias, selv hvis ingen entry ble aktiv.",
+      },
+      {
         label: "Apne trades",
         value: String(openTrades),
-        copy: "Trigger bekreftet, venter pa win/loss-markering",
-      },
-      {
-        label: "Dagens setups",
-        value: String(todaySetups),
-        copy: "En aktiv setup per marked i dagens plan",
-      },
-      {
-        label: "Laeringsvindu",
-        value: String(sampleSize),
-        copy: "Summerer vinduet som brukes i adaptive vekter",
+        copy: sampleSize
+          ? `Laeringsmotoren bruker na ${sampleSize} trades i aktivt vindu.`
+          : "Ingen bekreftede trades enda. Laeringen er fortsatt i warmup.",
       },
     ];
 
@@ -685,16 +698,22 @@
 
   function renderSignals() {
     const setups = Object.values(state.setupsByDate[todayKey()] || {});
+    const windowState = getWatchWindowState();
     dom.signalsGrid.innerHTML = setups
       .map((setup) => {
         const learning = state.learningByMarket[setup.market] || defaultLearning(setup.market);
         const activeTrade = state.trades.find((trade) => trade.market === setup.market && trade.status === "open");
         const stopPrice = activeTrade?.features?.stopPrice;
         const targetPrice = activeTrade?.features?.targetPrice;
+        const biasIntent = getBiasIntentCopy(setup.confidence);
         const autoExitCopy =
           stopPrice && targetPrice
             ? `Auto SL ${stopPrice} / TP ${targetPrice}`
             : "Auto SL/TP settes nar entry blir bekreftet";
+        const monitorCopy =
+          activeTrade
+            ? "Entry er aktiv og overvakes videre av serveren."
+            : setup.monitorMessage || windowState.note;
         return `
           <article class="signal-card">
             <div class="signal-top">
@@ -703,6 +722,14 @@
                 <div class="signal-market">${setup.marketLabel}</div>
               </div>
               <div class="pill ${setup.bias === "long" ? "pill-long" : "pill-short"}">${setup.bias.toUpperCase()}</div>
+            </div>
+
+            <div class="signal-status-banner">
+              <div>
+                <p class="detail-label">Dagens signal</p>
+                <p class="signal-status-copy">${setup.bias.toUpperCase()} bias med ${setup.confidence}% confidence</p>
+              </div>
+              <span class="pill ${setup.confidence <= 24 ? "pill-weak" : "pill-strong"}">${biasIntent}</span>
             </div>
 
             <div class="signal-gridline">
@@ -728,13 +755,17 @@
               </div>
               <div class="detail-card">
                 <p class="detail-label">Entry-metode</p>
-                <p class="detail-value">Vent pa candle-bekreftelse i sonen</p>
+                <p class="detail-value">${
+                  setup.confidence <= 24
+                    ? "Lav confidence: bias vises, men dette er ikke en anbefalt trade enda"
+                    : "Vent pa candle-bekreftelse i sonen"
+                }</p>
               </div>
             </div>
 
             <div class="detail-card">
               <p class="detail-label">Monitor</p>
-              <p class="detail-value">${setup.monitorMessage}</p>
+              <p class="detail-value">${monitorCopy}</p>
             </div>
 
             <ul class="feature-list">
@@ -794,13 +825,14 @@
 
   function renderHistory() {
     if (!state.trades.length) {
+      const windowState = getWatchWindowState();
       dom.historyList.innerHTML = `
         <article class="history-empty">
           <p class="eyebrow">Historikk</p>
-          <h3>Ingen trades enda</h3>
+          <h3>Ingen bekreftede entries enda</h3>
           <p class="section-note">
-            Appen vil vise trades her sa snart en entry blir bekreftet av serveren
-            eller du bruker lokal demo/testing.
+            Dagens bias-signaler vises alltid over. Historikken fylles bare nar entry faktisk
+            blir bekreftet i overvakingsvinduet. ${windowState.note}
           </p>
         </article>
       `;
@@ -921,6 +953,49 @@
     const startValue = startHour * 60 + startMinute;
     const endValue = endHour * 60 + endMinute;
     return value >= startValue && value <= endValue;
+  }
+
+  function getWatchWindowState(now = new Date()) {
+    const [startHour, startMinute] = WATCH_WINDOW.start.split(":").map(Number);
+    const [endHour, endMinute] = WATCH_WINDOW.end.split(":").map(Number);
+    const value = now.getHours() * 60 + now.getMinutes();
+    const startValue = startHour * 60 + startMinute;
+    const endValue = endHour * 60 + endMinute;
+
+    if (value < startValue) {
+      return {
+        phase: "before",
+        label: "Venter pa vindu",
+        note: `Bias er klar. Entry-overvaking starter ${WATCH_WINDOW.start}.`,
+      };
+    }
+
+    if (value > endValue) {
+      return {
+        phase: "after",
+        label: "Vindu stengt",
+        note: `Dagens bias vises fortsatt, men nye entries ventes til i morgen ${WATCH_WINDOW.start}.`,
+      };
+    }
+
+    return {
+      phase: "live",
+      label: "Overvaker na",
+      note: "Appen sjekker entry-zone og candle-trigger akkurat na.",
+    };
+  }
+
+  function getBiasIntentCopy(confidence) {
+    if (confidence <= 24) {
+      return "Bias only";
+    }
+    if (confidence <= 49) {
+      return "Svak setup";
+    }
+    if (confidence <= 69) {
+      return "Moderat setup";
+    }
+    return "Sterk setup";
   }
 
   async function refreshSupabaseStatus(logResult) {
