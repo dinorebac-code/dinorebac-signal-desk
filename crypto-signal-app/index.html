@@ -74,7 +74,7 @@
           <div class="topbar-copy">
             <p class="eyebrow">Dashboard</p>
             <h2>Trading dashboard med premium oversikt</h2>
-            <p>Live setups, laering, historikk og status fra Supabase i ett roligere dashboard.</p>
+            <p>Daglig bias, trigger-status og historikk i ett enklere dashboard.</p>
           </div>
           <div class="topbar-actions">
             <div class="window-pill">Monitoring Window <strong>16:30 - 17:30</strong></div>
@@ -87,15 +87,12 @@
             <section class="hero-card">
               <div class="hero-copy-block">
                 <p class="eyebrow">Signal Engine</p>
-                <h3>Daglige setups med automatisk trigger, historikk og laering</h3>
-                <p class="hero-lead">
-                  Appen er gjort om til en mer premium dashboard-opplevelse: mindre stoy,
-                  tydeligere kort, mer fokus pa dagens setups og enklere navigasjon.
-                </p>
+                <h3>Dagens setups</h3>
+                <p class="hero-lead">Appen viser alltid bias. Entry blir bare aktiv hvis triggeren faktisk bekreftes.</p>
                 <div class="hero-chips">
                   <span class="hero-chip">SOL + EUR/USD</span>
-                  <span class="hero-chip">Auto resolve win/loss</span>
-                  <span class="hero-chip">Entry email alerts</span>
+                  <span class="hero-chip">Auto resolve</span>
+                  <span class="hero-chip">Email alerts</span>
                 </div>
               </div>
               <div class="hero-actions">
@@ -105,7 +102,7 @@
                 <button id="reset-button" class="button button-secondary" type="button">
                   Nullstill lokal cache
                 </button>
-                <p class="action-helper">Du trenger vanligvis bare a oppdatere og lese dagens plan.</p>
+                <p class="action-helper">Vanlig bruk: oppdater og les dagens plan.</p>
               </div>
             </section>
 
@@ -134,9 +131,9 @@
                 <div class="section-heading compact">
                   <div>
                     <p class="eyebrow">Monitoring</p>
-                    <h3>Trigger-status og systemlogg</h3>
+                    <h3>Trigger-status</h3>
                   </div>
-                  <p class="section-note">Viser hva som skjer mens markedet overvakes.</p>
+                  <p class="section-note">Live status for dagens signaler.</p>
                 </div>
                 <div id="monitor-log" class="log-list"></div>
               </div>
@@ -147,44 +144,31 @@
                 <div class="section-heading compact">
                   <div>
                     <p class="eyebrow">Status</p>
-                    <h3>App-tilstand og oppsett</h3>
+                    <h3>System</h3>
                   </div>
                 </div>
-                <div class="two-column">
+                <dl class="status-list compact-status">
                   <div>
-                    <ul class="check-list">
-                      <li>SQL-skjema og Edge Functions ma vaere deployet i Supabase.</li>
-                      <li>Cron-jobbene bygger setups, trigger entries og lukker trades automatisk.</li>
-                      <li>Resend-secrets ma vaere satt hvis du vil ha e-postvarsler.</li>
-                      <li>Avanserte knapper under er bare for testing eller feilsoking.</li>
-                    </ul>
+                    <dt>Lagring</dt>
+                    <dd id="storage-status">Aktivt</dd>
                   </div>
-                  <dl class="status-list">
-                    <div>
-                      <dt>Lokalt lager</dt>
-                      <dd id="storage-status">Aktivt</dd>
-                    </div>
-                    <div>
-                      <dt>E-postvarsler</dt>
-                      <dd id="email-status">Venter pa RESEND_API_KEY</dd>
-                    </div>
-                    <div>
-                      <dt>Supabase sync</dt>
-                      <dd id="sync-status">Ikke konfigurert</dd>
-                    </div>
-                    <div>
-                      <dt>Siste oppdatering</dt>
-                      <dd id="last-update-label">Ikke kjort enda</dd>
-                    </div>
-                  </dl>
-                </div>
+                  <div>
+                    <dt>E-post</dt>
+                    <dd id="email-status">Aktiv</dd>
+                  </div>
+                  <div>
+                    <dt>Supabase</dt>
+                    <dd id="sync-status">Klar</dd>
+                  </div>
+                  <div>
+                    <dt>Oppdatert</dt>
+                    <dd id="last-update-label">Ikke kjort enda</dd>
+                  </div>
+                </dl>
               </div>
 
               <details class="dev-tools">
-                <summary>Test og feilsoking</summary>
-                <p class="dev-tools-note">
-                  Disse knappene er bare for lokal testing. Vanlig bruk er dashboard + automatisering i Supabase.
-                </p>
+                <summary>Avanserte verktoy</summary>
                 <div class="dev-tools-grid">
                   <button id="run-setup-button" class="button button-secondary" type="button">
                     Kjor lokal setup

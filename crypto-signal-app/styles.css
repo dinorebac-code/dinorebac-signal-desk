@@ -745,6 +745,18 @@ h4 {
   gap: 16px;
 }
 
+.compact-status {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.compact-status div {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(144, 169, 255, 0.1);
+}
+
 .status-list dt {
   color: var(--muted);
 }
@@ -872,7 +884,8 @@ h4 {
 
   .stats-grid,
   .signal-gridline,
-  .history-meta {
+  .history-meta,
+  .compact-status {
     grid-template-columns: 1fr;
   }
 

@@ -699,6 +699,19 @@
   function renderSignals() {
     const setups = Object.values(state.setupsByDate[todayKey()] || {});
     const windowState = getWatchWindowState();
+    if (!setups.length) {
+      dom.signalsGrid.innerHTML = `
+        <article class="history-empty">
+          <p class="eyebrow">Dagens signaler</p>
+          <h3>Bygger dagens bias akkurat na</h3>
+          <p class="section-note">
+            Appen fant ingen ferdige signaler fra serveren i dette oyeblikket. Den prover automatisk
+            a hente eller bygge dagens bias for SOL og EUR/USD, slik at dashboardet ikke blir tomt.
+          </p>
+        </article>
+      `;
+      return;
+    }
     dom.signalsGrid.innerHTML = setups
       .map((setup) => {
         const learning = state.learningByMarket[setup.market] || defaultLearning(setup.market);
@@ -1037,6 +1050,7 @@
         if (generated) {
           return hydrateFromSupabase(showLog);
         }
+        return false;
       }
 
       const setupMap = {};
