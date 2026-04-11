@@ -1021,13 +1021,7 @@
     }
 
     try {
-      const response = await fetch(`${CONFIG.supabaseUrl}/functions/v1/dashboard-state`, {
-        method: "GET",
-        headers: {
-          apikey: CONFIG.supabaseAnonKey,
-          Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
-        },
-      });
+      const response = await fetchWithSupabaseAuth("dashboard-state", "GET");
 
       if (!response.ok) {
         return false;
@@ -1036,6 +1030,13 @@
       const payload = await response.json();
       if (!payload.ok) {
         return false;
+      }
+
+      if (!payload.setups?.length) {
+        const generated = await ensureTodayServerSetups(showLog);
+        if (generated) {
+          return hydrateFromSupabase(showLog);
+        }
       }
 
       const setupMap = {};
@@ -1103,21 +1104,49 @@
     }
   }
 
+  async function ensureTodayServerSetups(showLog) {
+    try {
+      const response = await fetchWithSupabaseAuth("daily-setup", "POST", {
+        source: "frontend",
+        reason: "missing-today-setups",
+      });
+      if (!response.ok) {
+        return false;
+      }
+
+      const payload = await response.json();
+      if (!payload.ok) {
+        return false;
+      }
+
+      if (showLog) {
+        addLog("Dagens signaler manglet og ble generert automatisk fra serveren.", "success");
+      }
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  async function fetchWithSupabaseAuth(functionName, method = "GET", body = null) {
+    return fetch(`${CONFIG.supabaseUrl}/functions/v1/${functionName}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        apikey: CONFIG.supabaseAnonKey,
+        Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
   async function pushTradeResultToSupabase(tradeId, result) {
     if (!CONFIG.supabaseUrl || !CONFIG.supabaseAnonKey) {
       return;
     }
 
     try {
-      const response = await fetch(`${CONFIG.supabaseUrl}/functions/v1/record-result`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: CONFIG.supabaseAnonKey,
-          Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
-        },
-        body: JSON.stringify({ tradeId, result }),
-      });
+      const response = await fetchWithSupabaseAuth("record-result", "POST", { tradeId, result });
 
       if (!response.ok) {
         return;
