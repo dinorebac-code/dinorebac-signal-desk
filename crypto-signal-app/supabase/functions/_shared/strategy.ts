@@ -173,17 +173,25 @@ export function buildSetup(marketCode: string, candles: Candle[], learning: Part
 
 export function detectTrigger(triggerType: string, previous: Candle, latest: Candle) {
   const latestBody = Math.abs(latest.close - latest.open);
+  const previousBody = Math.abs(previous.close - previous.open);
   const latestRange = latest.high - latest.low || 1;
   const upperWick = latest.high - Math.max(latest.open, latest.close);
   const lowerWick = Math.min(latest.open, latest.close) - latest.low;
+  const engulfTolerance = latestRange * 0.12;
 
   switch (triggerType) {
     case "bullish_engulfing":
-      return previous.close < previous.open && latest.close > latest.open && latest.close >= previous.open &&
-        latest.open <= previous.close;
+      return previous.close < previous.open &&
+        latest.close > latest.open &&
+        latest.close >= previous.open - engulfTolerance &&
+        latest.open <= previous.close + engulfTolerance &&
+        latestBody >= previousBody * 0.8;
     case "bearish_engulfing":
-      return previous.close > previous.open && latest.close < latest.open && latest.open >= previous.close &&
-        latest.close <= previous.open;
+      return previous.close > previous.open &&
+        latest.close < latest.open &&
+        latest.open >= previous.close - engulfTolerance &&
+        latest.close <= previous.open + engulfTolerance &&
+        latestBody >= previousBody * 0.8;
     case "shooting_star":
       return upperWick > latestBody * 2.2 && lowerWick < latestBody && latest.close < latest.open;
     case "hammer":

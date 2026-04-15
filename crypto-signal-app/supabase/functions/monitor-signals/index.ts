@@ -38,10 +38,20 @@ Deno.serve(async (request) => {
       }
 
       const candles = await fetchCandles(market.symbol);
-      const latest = candles[candles.length - 1];
-      const previous = candles[candles.length - 2];
+      const latest = candles[candles.length - 2];
+      const previous = candles[candles.length - 3];
+      if (!latest || !previous) {
+        continue;
+      }
+
       const [zoneLow, zoneHigh] = String(setup.entry_zone).split(" - ").map(Number);
-      const zoneHit = latest.low <= zoneHigh && latest.high >= zoneLow;
+      const zonePadding = buildZonePadding({
+        market: setup.market,
+        atr: Number(setup.features?.atr ?? 0),
+      });
+      const zoneHit = intersectsZone(previous, zoneLow, zoneHigh, zonePadding) ||
+        intersectsZone(latest, zoneLow, zoneHigh, zonePadding) ||
+        closeIsNearZone(latest.close, zoneLow, zoneHigh, zonePadding);
       const triggerHit = detectTrigger(setup.trigger_type, previous, latest);
 
       if (!zoneHit || !triggerHit) {
@@ -144,3 +154,24 @@ Deno.serve(async (request) => {
     }, 500);
   }
 });
+
+function intersectsZone(
+  candle: { low: number; high: number },
+  zoneLow: number,
+  zoneHigh: number,
+  padding: number,
+) {
+  return candle.low <= zoneHigh + padding && candle.high >= zoneLow - padding;
+}
+
+function closeIsNearZone(close: number, zoneLow: number, zoneHigh: number, padding: number) {
+  return close >= zoneLow - padding && close <= zoneHigh + padding;
+}
+
+function buildZonePadding(input: { market: string; atr: number }) {
+  if (input.atr > 0) {
+    return input.atr * 0.35;
+  }
+
+  return input.market === "SOL" ? 0.18 : 0.00035;
+}
