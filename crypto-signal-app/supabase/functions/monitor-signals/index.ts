@@ -177,6 +177,7 @@ function findEntryConfirmation(input: {
     .slice(-32);
 
   let zoneTouched = false;
+  let candlesSinceZoneTouch = Number.POSITIVE_INFINITY;
   for (let index = 1; index < recentCandles.length; index += 1) {
     const previous = recentCandles[index - 1];
     const latest = recentCandles[index];
@@ -185,7 +186,10 @@ function findEntryConfirmation(input: {
       closeIsNearZone(latest.close, input.zoneLow, input.zoneHigh, input.zonePadding);
 
     zoneTouched = zoneTouched || pairTouchedZone;
-    if (pairTouchedZone && detectTrigger(input.triggerType, previous, latest)) {
+    candlesSinceZoneTouch = pairTouchedZone ? 0 : candlesSinceZoneTouch + 1;
+    const recentZoneTouch = candlesSinceZoneTouch <= 3;
+
+    if (recentZoneTouch && detectTrigger(input.triggerType, previous, latest)) {
       return {
         confirmed: true,
         zoneTouched,

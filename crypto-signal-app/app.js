@@ -488,15 +488,35 @@
     }
 
     const latestBody = Math.abs(latest.close - latest.open);
+    const previousBody = Math.abs(previous.close - previous.open);
     const latestRange = latest.high - latest.low || 1;
+    const previousRange = previous.high - previous.low || 1;
     const upperWick = latest.high - Math.max(latest.open, latest.close);
     const lowerWick = Math.min(latest.open, latest.close) - latest.low;
+    const engulfTolerance = Math.max(latestRange, previousRange) * 0.18;
+    const latestBodyShare = latestBody / latestRange;
+    const bullishBody = latest.close > latest.open;
+    const bearishBody = latest.close < latest.open;
+    const previousBearishOrWeak = previous.close <= previous.open || previousBody / previousRange < 0.22;
+    const previousBullishOrWeak = previous.close >= previous.open || previousBody / previousRange < 0.22;
+    const bullishEngulf =
+      bullishBody &&
+      previousBearishOrWeak &&
+      latest.open <= previous.close + engulfTolerance &&
+      (latest.close >= previous.open - engulfTolerance || latest.close >= previous.high - engulfTolerance) &&
+      (latestBody >= previousBody * 0.65 || latestBodyShare >= 0.48);
+    const bearishEngulf =
+      bearishBody &&
+      previousBullishOrWeak &&
+      latest.open >= previous.close - engulfTolerance &&
+      (latest.close <= previous.open + engulfTolerance || latest.close <= previous.low + engulfTolerance) &&
+      (latestBody >= previousBody * 0.65 || latestBodyShare >= 0.48);
 
     switch (triggerType) {
       case "bullish_engulfing":
-        return previous.close < previous.open && latest.close > latest.open && latest.close >= previous.open && latest.open <= previous.close;
+        return bullishEngulf;
       case "bearish_engulfing":
-        return previous.close > previous.open && latest.close < latest.open && latest.open >= previous.close && latest.close <= previous.open;
+        return bearishEngulf;
       case "shooting_star":
         return upperWick > latestBody * 2.2 && lowerWick < latestBody && latest.close < latest.open;
       case "hammer":

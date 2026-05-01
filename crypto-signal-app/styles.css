@@ -1348,10 +1348,12 @@ h3 {
 @media (max-width: 860px) {
   .app-shell {
     display: block;
+    width: 100%;
   }
 
   .sidebar {
     padding: 16px;
+    min-height: auto;
   }
 
   .topbar-actions {
@@ -1365,6 +1367,141 @@ h3 {
 
   .signal-market {
     font-size: 3rem;
+  }
+}
+
+@media (max-width: 680px) {
+  body {
+    min-width: 0;
+  }
+
+  .sidebar {
+    display: block;
+    border-right: 0;
+    border-bottom: 1px solid rgba(242, 200, 121, 0.12);
+  }
+
+  .brand-row {
+    align-items: flex-start;
+  }
+
+  .brand-subtitle,
+  .sidebar-nav,
+  .sidebar-panel {
+    display: none;
+  }
+
+  .main-content {
+    padding: 12px 10px 26px;
+    width: 100%;
+  }
+
+  .topbar {
+    display: grid;
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 1.45rem;
+  }
+
+  h2 {
+    font-size: clamp(2rem, 11vw, 3rem);
+    letter-spacing: -0.07em;
+  }
+
+  .topbar-copy p:not(.eyebrow) {
+    font-size: 0.98rem;
+  }
+
+  .dashboard-layout,
+  .primary-column,
+  .secondary-column {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .command-card {
+    padding: 14px;
+  }
+
+  .hero-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-chip {
+    font-size: 0.9rem;
+  }
+
+  .quick-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .quick-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quick-link {
+    flex: 0 0 auto;
+  }
+
+  .section-heading,
+  .section-heading.compact,
+  .signal-top,
+  .signal-status-banner,
+  .history-top,
+  .history-footer,
+  .status-list div {
+    align-items: stretch;
+  }
+
+  .signal-card,
+  .surface-card,
+  .panel,
+  .dev-tools,
+  .history-card,
+  .learning-card {
+    padding: 14px;
+    width: 100%;
+  }
+
+  .signal-card::after {
+    width: 70%;
+    opacity: 0.14;
+  }
+
+  .signal-market {
+    font-size: clamp(3rem, 18vw, 4.4rem);
+  }
+
+  .signal-status-copy {
+    font-size: clamp(2rem, 12vw, 3rem);
+  }
+
+  .signal-gridline,
+  .history-meta,
+  .stats-grid,
+  .compact-status {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-card {
+    padding: 11px;
+  }
+
+  .detail-label {
+    letter-spacing: 0.1em;
+  }
+
+  .detail-value {
+    font-size: 1rem;
+  }
+
+  .collapse-summary {
+    align-items: flex-start;
   }
 }
 
