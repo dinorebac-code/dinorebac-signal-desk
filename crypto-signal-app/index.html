@@ -17,8 +17,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="bg-orb bg-orb-a"></div>
-    <div class="bg-orb bg-orb-b"></div>
     <div class="bg-grid"></div>
     <div class="app-shell">
       <aside class="sidebar">
@@ -26,19 +24,15 @@
           <div class="brand-row">
             <div class="brand-badge">S</div>
             <div>
-              <p class="eyebrow">Premium Signal Lab</p>
+              <p class="eyebrow">Signal Desk</p>
               <h1>Signal Desk</h1>
             </div>
           </div>
-          <p class="brand-subtitle">
-            Daglig analyse for SOL og EUR/USD med auto-trigger, auto win/loss og separat
-            laering per marked.
-          </p>
+          <p class="brand-subtitle">SOL og EUR/USD. Ett daglig setup, automatisk entry-sjekk og historikk.</p>
         </div>
 
         <nav class="sidebar-nav" aria-label="Hovednavigasjon">
-          <a class="nav-link active" href="#signals-section"><span class="nav-dot"></span>Dashboard</a>
-          <a class="nav-link" href="#signals-section"><span class="nav-dot"></span>Today's setups</a>
+          <a class="nav-link active" href="#signals-section"><span class="nav-dot"></span>Setups</a>
           <a class="nav-link" href="#history-section"><span class="nav-dot"></span>Historikk</a>
           <a class="nav-link" href="#monitor-section"><span class="nav-dot"></span>Monitoring</a>
           <a class="nav-link" href="#status-section"><span class="nav-dot"></span>Status</a>
@@ -47,9 +41,7 @@
         <div class="sidebar-panel">
           <p class="panel-label">Aktivt vindu</p>
           <p id="window-label" class="sidebar-value">15:00-20:00 Europe/Oslo</p>
-          <p class="sidebar-note">
-            Supabase bygger dagens setups og sjekker trigger-candles automatisk i dette vinduet.
-          </p>
+          <p class="sidebar-note">Setup bygges rundt 14:55. Entry overvakes etterpa.</p>
         </div>
 
         <div class="sidebar-panel">
@@ -63,18 +55,16 @@
         <div class="sidebar-panel">
           <p class="panel-label">Varseladresse</p>
           <p id="notification-email" class="sidebar-value">dinorebac@gmail.com</p>
-          <p class="sidebar-note">
-            Entry-mail sendes hit sa snart et setup blir bekreftet i markedet.
-          </p>
+          <p class="sidebar-note">Mail sendes bare nar entry blir bekreftet.</p>
         </div>
       </aside>
 
       <main class="main-content">
         <header class="topbar">
           <div class="topbar-copy">
-            <p class="eyebrow">Dashboard</p>
-            <h2>Trading dashboard med premium oversikt</h2>
-            <p>Daglig bias, trigger-status og historikk i ett enklere dashboard.</p>
+            <p class="eyebrow">Live Trading Desk</p>
+            <h2>Dagens plan, entry og historikk</h2>
+            <p>Rent dashboard for bias, trigger og resultatlaering.</p>
           </div>
           <div class="topbar-actions">
             <div class="window-pill">Monitoring Window <strong>15:00 - 20:00</strong></div>
@@ -84,15 +74,15 @@
 
         <div class="dashboard-layout">
           <div class="primary-column">
-            <section class="hero-card">
+            <section class="hero-card command-card">
               <div class="hero-copy-block">
                 <p class="eyebrow">Signal Engine</p>
-                <h3>Dagens setups</h3>
-                <p class="hero-lead">Appen viser alltid bias. Entry blir bare aktiv hvis triggeren faktisk bekreftes.</p>
+                <h3>Alltid bias. Trade bare ved bekreftet entry.</h3>
+                <p class="hero-lead">Hvis confidence er lav, vises retning likevel. Mail sendes forst nar trigger-candle bekrefter entry.</p>
                 <div class="hero-chips">
                   <span class="hero-chip">SOL + EUR/USD</span>
+                  <span class="hero-chip">15:00-20:00 entry scan</span>
                   <span class="hero-chip">Auto resolve</span>
-                  <span class="hero-chip">Email alerts</span>
                 </div>
               </div>
               <div class="hero-actions">
@@ -102,7 +92,7 @@
                 <button id="reset-button" class="button button-secondary" type="button">
                   Nullstill lokal cache
                 </button>
-                <p class="action-helper">Vanlig bruk: oppdater og les dagens plan.</p>
+                <p class="action-helper">Vanlig bruk: apne appen og les kortene. Serveren jobber uansett.</p>
               </div>
             </section>
 
@@ -117,7 +107,7 @@
               <div class="section-heading">
                 <div>
                   <p class="eyebrow">Today's setups</p>
-                  <h3>Bias, confidence og entry-trigger</h3>
+                  <h3>Signal cards</h3>
                 </div>
                 <p id="data-source-label" class="section-note">
                   Datakilde: lokal preview til API er konfigurert.
@@ -127,26 +117,27 @@
             </section>
 
             <section class="section" id="monitor-section">
-              <div class="panel">
-                <div class="section-heading compact">
+              <details class="panel collapse-panel">
+                <summary class="collapse-summary">
                   <div>
                     <p class="eyebrow">Monitoring</p>
                     <h3>Trigger-status</h3>
                   </div>
-                  <p class="section-note">Live status for dagens signaler.</p>
-                </div>
+                  <span>Vis detaljer</span>
+                </summary>
                 <div id="monitor-log" class="log-list"></div>
-              </div>
+              </details>
             </section>
 
             <section class="section" id="status-section">
-              <div class="panel">
-                <div class="section-heading compact">
+              <details class="panel collapse-panel">
+                <summary class="collapse-summary">
                   <div>
                     <p class="eyebrow">Status</p>
                     <h3>System</h3>
                   </div>
-                </div>
+                  <span>Vis oppsett</span>
+                </summary>
                 <dl class="status-list compact-status">
                   <div>
                     <dt>Lagring</dt>
@@ -165,7 +156,7 @@
                     <dd id="last-update-label">Ikke kjort enda</dd>
                   </div>
                 </dl>
-              </div>
+              </details>
 
               <details class="dev-tools">
                 <summary>Avanserte verktoy</summary>
@@ -192,7 +183,7 @@
               <div class="section-heading compact">
                 <div>
                   <p class="eyebrow">Overall statistics</p>
-                  <h3>Winrate og aktivitetsniva</h3>
+                  <h3>Performance</h3>
                 </div>
               </div>
               <div class="stats-grid" id="stats-grid"></div>
@@ -202,9 +193,9 @@
               <div class="section-heading compact">
                 <div>
                   <p class="eyebrow">Learning status</p>
-                  <h3>Separat per marked</h3>
+                  <h3>Learning</h3>
                 </div>
-                <p class="section-note">Bygger mest pa de siste 100 lukkede tradene.</p>
+                <p class="section-note">Siste 100 lukkede trades.</p>
               </div>
               <div id="learning-grid" class="learning-grid"></div>
             </section>
@@ -213,9 +204,9 @@
               <div class="section-heading compact">
                 <div>
                   <p class="eyebrow">Recent trades</p>
-                  <h3>Historikk og manuelt override</h3>
+                  <h3>Trades</h3>
                 </div>
-                <p class="section-note">Win/loss-knapper er bare backup hvis du vil overstyre en trade.</p>
+                <p class="section-note">Auto win/loss, med manuell backup.</p>
               </div>
               <div id="history-list" class="history-grid"></div>
             </section>

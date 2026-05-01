@@ -719,19 +719,18 @@
         const stopPrice = activeTrade?.features?.stopPrice;
         const targetPrice = activeTrade?.features?.targetPrice;
         const biasIntent = getBiasIntentCopy(setup.confidence);
-        const autoExitCopy =
-          stopPrice && targetPrice
-            ? `Auto SL ${stopPrice} / TP ${targetPrice}`
-            : "Auto SL/TP settes nar entry blir bekreftet";
+        const autoExitCopy = stopPrice && targetPrice ? `SL ${stopPrice} / TP ${targetPrice}` : "Settes ved entry";
         const monitorCopy =
           activeTrade
             ? "Entry er aktiv og overvakes videre av serveren."
             : setup.monitorMessage || windowState.note;
+        const confidenceTone = setup.confidence <= 24 ? "low" : setup.confidence <= 49 ? "mid" : "high";
+        const meterWidth = Math.max(4, Math.min(100, Number(setup.confidence) || 4));
         return `
-          <article class="signal-card">
+          <article class="signal-card signal-${setup.bias}">
             <div class="signal-top">
               <div>
-                <p class="eyebrow">Marked</p>
+                <p class="eyebrow">${setup.market === "SOL" ? "SOL/USD" : "EUR/USD"}</p>
                 <div class="signal-market">${setup.marketLabel}</div>
               </div>
               <div class="pill ${setup.bias === "long" ? "pill-long" : "pill-short"}">${setup.bias.toUpperCase()}</div>
@@ -739,21 +738,17 @@
 
             <div class="signal-status-banner">
               <div>
-                <p class="detail-label">Dagens signal</p>
-                <p class="signal-status-copy">${setup.bias.toUpperCase()} bias med ${setup.confidence}% confidence</p>
+                <p class="detail-label">Dagens bias</p>
+                <p class="signal-status-copy">${setup.bias.toUpperCase()} ${setup.confidence}%</p>
               </div>
               <span class="pill ${setup.confidence <= 24 ? "pill-weak" : "pill-strong"}">${biasIntent}</span>
             </div>
 
+            <div class="confidence-track confidence-${confidenceTone}" aria-label="Confidence ${setup.confidence}%">
+              <span style="width:${meterWidth}%"></span>
+            </div>
+
             <div class="signal-gridline">
-              <div class="detail-card">
-                <p class="detail-label">Confidence</p>
-                <p class="detail-value">${setup.confidence}%</p>
-              </div>
-              <div class="detail-card">
-                <p class="detail-label">Anbefaling</p>
-                <p class="detail-value">${formatRecommendation(setup.recommendation)}</p>
-              </div>
               <div class="detail-card">
                 <p class="detail-label">Entry zone</p>
                 <p class="detail-value">${setup.entryZone}</p>
@@ -763,31 +758,33 @@
                 <p class="detail-value">${setup.triggerLabel}</p>
               </div>
               <div class="detail-card">
-                <p class="detail-label">Auto exits</p>
+                <p class="detail-label">Auto SL/TP</p>
                 <p class="detail-value">${autoExitCopy}</p>
               </div>
               <div class="detail-card">
-                <p class="detail-label">Entry-metode</p>
+                <p class="detail-label">Mode</p>
                 <p class="detail-value">${
                   setup.confidence <= 24
-                    ? "Lav confidence: bias vises, men dette er ikke en anbefalt trade enda"
-                    : "Vent pa candle-bekreftelse i sonen"
+                    ? "Bias only"
+                    : formatRecommendation(setup.recommendation)
                 }</p>
               </div>
             </div>
 
-            <div class="detail-card">
-              <p class="detail-label">Monitor</p>
-              <p class="detail-value">${monitorCopy}</p>
-            </div>
-
-            <ul class="feature-list">
-              <li>EMA fast / slow: ${setup.features.emaFast} / ${setup.features.emaSlow}</li>
-              <li>RSI: ${setup.features.rsi}</li>
-              <li>Structure: ${setup.features.structure}</li>
-              <li>Laeringsmodus: ${learning.mode}</li>
-              <li>Datakilde: ${setup.source}</li>
-            </ul>
+            <details class="signal-details">
+              <summary>Trigger status og data</summary>
+              <div class="detail-card monitor-card">
+                <p class="detail-label">Monitor</p>
+                <p class="detail-value">${monitorCopy}</p>
+              </div>
+              <ul class="feature-list">
+                <li>EMA fast / slow: ${setup.features.emaFast} / ${setup.features.emaSlow}</li>
+                <li>RSI: ${setup.features.rsi}</li>
+                <li>Structure: ${setup.features.structure}</li>
+                <li>Laeringsmodus: ${learning.mode}</li>
+                <li>Datakilde: ${setup.source}</li>
+              </ul>
+            </details>
           </article>
         `;
       })
