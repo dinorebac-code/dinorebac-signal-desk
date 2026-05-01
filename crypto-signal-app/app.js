@@ -2,7 +2,7 @@
   const APP_VERSION = "0.1.0";
   const STORAGE_KEY = "signal-desk-state-v2";
   const CONFIG = window.APP_CONFIG || {};
-  const WATCH_WINDOW = CONFIG.watchWindow || { start: "16:30", end: "17:30", pollSeconds: 45 };
+  const WATCH_WINDOW = CONFIG.watchWindow || { start: "15:00", end: "20:00", pollSeconds: 45 };
   const MARKETS = [
     {
       code: "SOL",

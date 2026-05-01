@@ -6,8 +6,8 @@ window.APP_CONFIG = {
   notificationEmail: "dinorebac@gmail.com",
   timezone: "Europe/Oslo",
   watchWindow: {
-    start: "16:00",
-    end: "17:30",
+    start: "15:00",
+    end: "20:00",
     pollSeconds: 45,
   },
   demoMode: false,

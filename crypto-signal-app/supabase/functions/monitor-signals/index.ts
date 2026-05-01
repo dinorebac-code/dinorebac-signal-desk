@@ -37,33 +37,36 @@ Deno.serve(async (request) => {
         continue;
       }
 
-      const candles = await fetchCandles(market.symbol);
-      const latest = candles[candles.length - 2];
-      const previous = candles[candles.length - 3];
-      if (!latest || !previous) {
-        continue;
-      }
-
       const [zoneLow, zoneHigh] = String(setup.entry_zone).split(" - ").map(Number);
       const zonePadding = buildZonePadding({
         market: setup.market,
         atr: Number(setup.features?.atr ?? 0),
       });
-      const zoneHit = intersectsZone(previous, zoneLow, zoneHigh, zonePadding) ||
-        intersectsZone(latest, zoneLow, zoneHigh, zonePadding) ||
-        closeIsNearZone(latest.close, zoneLow, zoneHigh, zonePadding);
-      const triggerHit = detectTrigger(setup.trigger_type, previous, latest);
+      const candles = await fetchCandles(market.symbol, 160);
+      const confirmation = findEntryConfirmation({
+        candles,
+        setupGeneratedAt: setup.generated_at,
+        triggerType: setup.trigger_type,
+        zoneLow,
+        zoneHigh,
+        zonePadding,
+      });
 
-      if (!zoneHit || !triggerHit) {
+      if (!confirmation.confirmed) {
         await supabase
           .from("market_setups")
           .update({
-            monitor_state: zoneHit ? "watching" : "waiting",
-            monitor_message: zoneHit
-              ? `Pris er i sonen, men ${String(setup.trigger_type).replaceAll("_", " ")} er ikke bekreftet enda.`
+            monitor_state: confirmation.zoneTouched ? "watching" : "waiting",
+            monitor_message: confirmation.zoneTouched
+              ? `Pris har vaert i sonen, men ${String(setup.trigger_type).replaceAll("_", " ")} er ikke bekreftet enda.`
               : "Venter pa at pris skal komme inn i entry-zonen.",
           })
           .eq("id", setup.id);
+        continue;
+      }
+
+      const latest = confirmation.latest;
+      if (!latest) {
         continue;
       }
 
@@ -92,6 +95,7 @@ Deno.serve(async (request) => {
           ...(setup.features ?? {}),
           entryPrice: latest.close,
           latestCandleAt: latest.datetime,
+          confirmationMatchedAt: latest.datetime,
           stopPrice: autoExit.stopPrice,
           targetPrice: autoExit.targetPrice,
           resolutionRule: autoExit.resolutionRule,
@@ -154,6 +158,50 @@ Deno.serve(async (request) => {
     }, 500);
   }
 });
+
+function findEntryConfirmation(input: {
+  candles: Array<{ datetime: string; open: number; high: number; low: number; close: number }>;
+  setupGeneratedAt: string;
+  triggerType: string;
+  zoneLow: number;
+  zoneHigh: number;
+  zonePadding: number;
+}) {
+  const closedCandles = input.candles.slice(0, -1);
+  const setupTime = new Date(input.setupGeneratedAt).getTime();
+  const recentCandles = closedCandles
+    .filter((candle) => {
+      const candleTime = new Date(candle.datetime).getTime();
+      return Number.isNaN(candleTime) || Number.isNaN(setupTime) || candleTime >= setupTime - 30 * 60 * 1000;
+    })
+    .slice(-32);
+
+  let zoneTouched = false;
+  for (let index = 1; index < recentCandles.length; index += 1) {
+    const previous = recentCandles[index - 1];
+    const latest = recentCandles[index];
+    const pairTouchedZone = intersectsZone(previous, input.zoneLow, input.zoneHigh, input.zonePadding) ||
+      intersectsZone(latest, input.zoneLow, input.zoneHigh, input.zonePadding) ||
+      closeIsNearZone(latest.close, input.zoneLow, input.zoneHigh, input.zonePadding);
+
+    zoneTouched = zoneTouched || pairTouchedZone;
+    if (pairTouchedZone && detectTrigger(input.triggerType, previous, latest)) {
+      return {
+        confirmed: true,
+        zoneTouched,
+        previous,
+        latest,
+      };
+    }
+  }
+
+  return {
+    confirmed: false,
+    zoneTouched,
+    previous: null,
+    latest: null,
+  };
+}
 
 function intersectsZone(
   candle: { low: number; high: number },

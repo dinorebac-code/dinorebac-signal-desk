@@ -1,0 +1,3 @@
+crypto-signal-app/node_modules/
+crypto-signal-app/supabase/.temp/
+crypto-signal-app/supabase/cron-live-update.sql

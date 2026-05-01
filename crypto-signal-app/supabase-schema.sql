@@ -80,11 +80,14 @@ alter table trades add column if not exists setup_id uuid references market_setu
 
 insert into app_settings (key, value)
 values
-  ('watch_window', '{"start":"16:30","end":"17:30","timezone":"Europe/Oslo","pollSeconds":45}'),
+  ('watch_window', '{"start":"15:00","end":"20:00","timezone":"Europe/Oslo","pollSeconds":45}'),
   ('notification_email', '{"email":"dinorebac@gmail.com"}'),
   ('learning_window', '{"count":100}'),
   ('auto_resolution', '{"interval":"15m","logic":"hidden_atr_exit","notes":"Resolves win/loss automatically from post-entry candles"}')
-on conflict (key) do nothing;
+on conflict (key) do update
+set
+  value = excluded.value,
+  updated_at = now();
 
 insert into learning_state (market, sample_size, state)
 values
@@ -141,3 +144,45 @@ create unique index if not exists uq_market_setups_trade_date_market on market_s
 create index if not exists idx_trades_trade_date on trades (trade_date desc, market);
 create index if not exists idx_trades_status on trades (status, result);
 create unique index if not exists uq_trades_setup_id on trades (setup_id) where setup_id is not null;
+
+alter table market_setups enable row level security;
+alter table trades enable row level security;
+alter table learning_state enable row level security;
+alter table app_settings enable row level security;
+
+revoke all on table market_setups from anon, authenticated;
+revoke all on table trades from anon, authenticated;
+revoke all on table learning_state from anon, authenticated;
+revoke all on table app_settings from anon, authenticated;
+
+drop policy if exists "deny_anon_market_setups" on market_setups;
+create policy "deny_anon_market_setups"
+on market_setups
+for all
+to anon, authenticated
+using (false)
+with check (false);
+
+drop policy if exists "deny_anon_trades" on trades;
+create policy "deny_anon_trades"
+on trades
+for all
+to anon, authenticated
+using (false)
+with check (false);
+
+drop policy if exists "deny_anon_learning_state" on learning_state;
+create policy "deny_anon_learning_state"
+on learning_state
+for all
+to anon, authenticated
+using (false)
+with check (false);
+
+drop policy if exists "deny_anon_app_settings" on app_settings;
+create policy "deny_anon_app_settings"
+on app_settings
+for all
+to anon, authenticated
+using (false)
+with check (false);

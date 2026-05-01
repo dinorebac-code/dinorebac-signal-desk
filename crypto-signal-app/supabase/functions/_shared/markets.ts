@@ -1,6 +1,6 @@
 export const WATCH_WINDOW = {
-  start: "16:00",
-  end: "17:30",
+  start: "15:00",
+  end: "20:00",
   timezone: "Europe/Oslo",
 };
 
